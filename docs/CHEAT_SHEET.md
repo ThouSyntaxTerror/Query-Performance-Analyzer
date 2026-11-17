@@ -27,36 +27,64 @@ cd "C:\Users\athar\OneDrive\Desktop\dhjhg\dbms\mini project\mysql-query-analyzer
 
 Under the score: **Why this score**, **Suggested changes**, then **Analysis** (four scores, access type, totals).
 
-## Part B: MySQL terminal. Six commands, each prints its own headings.
-```sql
-SOURCE sql/demo_1.sql;
-```
-Tables, constraints (`SHOW CREATE TABLE`), row counts, and the newest rows are the queries you just ran on the website. **Say: "same database as the website."**
+## Part B: MySQL terminal. Type these (short, no script files).
 
+**1. Tables and constraints**
 ```sql
-SOURCE sql/demo_2.sql;
+USE shop_query_analyzer;
+SHOW TABLES;
+SELECT * FROM customers LIMIT 5;
+SHOW CREATE TABLE orders\G
 ```
-Three accounts with different privileges. **Say: "the website's runner account can only read four tables."**
 
+**2. Join**
 ```sql
-SOURCE sql/demo_3.sql;
+SELECT c.name, o.order_id, o.total_amount FROM customers c JOIN orders o ON o.customer_id = c.customer_id WHERE c.city = 'Pune' LIMIT 5;
 ```
-Triggers, functions, procedures, the recommendations the triggers created, and the three queries (priority ranking, table hotspots, cosine similarity).
 
+**3. Trigger: show it, then make it fire** (capital G)
 ```sql
-SOURCE sql/demo_4.sql;
+SHOW TRIGGERS\G
+START TRANSACTION;
+INSERT INTO query_executions (query_id, duration_ms, rows_returned, rows_examined) VALUES (2, 120, 1, 60000);
+SELECT severity, suggestion FROM recommendations WHERE query_id = 2;
+ROLLBACK;
 ```
-Insert, select, update, delete, then cascade and restrict on foreign keys.
+Say: "I inserted one row; MySQL wrote those recommendations by itself."
 
+**4. Cascade** (everything is rolled back)
 ```sql
-SOURCE sql/demo_5.sql;
+START TRANSACTION;
+SELECT COUNT(*) FROM query_executions WHERE query_id = 1;
+DELETE FROM saved_queries WHERE query_id = 1;
+SELECT COUNT(*) FROM query_executions WHERE query_id = 1;
+ROLLBACK;
 ```
-JSON plans queried with `JSON_EXTRACT`, embeddings, and create/read/update/delete with cosine similarity.
+Say: "Deleting the query deleted its runs, plans and recommendations: ON DELETE CASCADE."
 
+**5. Users and privileges**
 ```sql
-SOURCE sql/demo_6.sql;
+SHOW GRANTS FOR 'qa_app'@'localhost' USING 'qa_app_role';
+SHOW GRANTS FOR 'qa_viewer'@'localhost' USING 'qa_viewer_role';
 ```
-**Triggers firing live and joins.** It shows the trigger code, inserts a test run that reads 60,000 rows to return 1, and the recommendation rows appear by themselves (two triggers fire); then `ROLLBACK` removes everything. Then an inner join, a left join, a three-table join with `GROUP BY`, and a join on a view. **Say: "I never wrote those recommendations; the trigger did."**
+
+**6. Insert, update, delete, select**
+```sql
+INSERT INTO customers (name, email, city, signup_date) VALUES ('Demo', 'demo@mail.test', 'Pune', CURDATE());
+SELECT customer_id, name, city FROM customers WHERE email = 'demo@mail.test';
+UPDATE customers SET city = 'Mumbai' WHERE email = 'demo@mail.test';
+DELETE FROM customers WHERE email = 'demo@mail.test';
+```
+
+**7. NoSQL / vector**
+```sql
+SELECT execution_id, JSON_UNQUOTE(JSON_EXTRACT(plan_json, '$[0].description')) AS root_step, JSON_EXTRACT(plan_json, '$[0].measured.endMs') AS root_ms FROM query_plans LIMIT 3;
+SELECT query_id, JSON_LENGTH(embedding) AS dimensions, embedding FROM saved_queries WHERE query_id = 5;
+SELECT b.label, ROUND(fn_cosine_similarity(a.embedding, b.embedding), 3) AS similarity FROM saved_queries a JOIN saved_queries b ON b.query_id <> a.query_id WHERE a.query_id = 5 ORDER BY similarity DESC LIMIT 3;
+```
+Say: "The plan is a JSON document. Each query is a 30-number vector. Cosine similarity finds queries shaped alike."
+
+(The `sql/demo_*.sql` files do the same thing in one command each; keep them as a backup only.)
 
 ## Part C: the index fix (2 minutes). Three commands, then clean up.
 1. Website: run the March query (score about 45 to 50).
