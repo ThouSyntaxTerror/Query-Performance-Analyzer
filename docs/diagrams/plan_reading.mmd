@@ -1,0 +1,13 @@
+flowchart TD
+    L["One line of EXPLAIN ANALYZE output<br/>-> Index lookup on o using fk_orders_customer (customer_id=c.customer_id)<br/>(cost=2.53 rows=10.1) (actual time=0.025..0.0276 rows=10 loops=625)"]
+    L --> D["Description<br/>how MySQL reached the table:<br/>table scan, index lookup, range scan"]
+    L --> E["(cost=2.53 rows=10.1)<br/>ESTIMATE made before running<br/>cost units and expected rows per loop"]
+    L --> M["(actual time=0.025..0.0276 rows=10 loops=625)<br/>MEASURED while running<br/>time to first and last row (ms),<br/>rows per loop, number of loops"]
+    M --> X["Rows examined at this step =<br/>rows x loops = 10 x 625 = 6,250"]
+    D --> W["Why were rows examined?<br/>table scan: no usable index, whole table read<br/>index lookup: index jumps to matching rows,<br/>repeated once per outer row"]
+    classDef a fill:#dbe7ff,stroke:#1d5fd1,color:#102a6b
+    classDef e fill:#f1f3f6,stroke:#5d6b7c,color:#333,stroke-dasharray: 5 5
+    classDef m fill:#dff3ea,stroke:#0b6b4d,color:#0d4a23
+    class L,D,W a
+    class E e
+    class M,X m

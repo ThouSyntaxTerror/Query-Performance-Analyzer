@@ -1,0 +1,30 @@
+flowchart LR
+    subgraph Accounts["MySQL accounts"]
+        U1["qa_app"]
+        U2["qa_viewer"]
+        U3["qa_runner<br/>max 5 connections"]
+    end
+    subgraph Roles["Roles (default role of each account)"]
+        R1["qa_app_role"]
+        R2["qa_viewer_role"]
+        R3["qa_runner_role"]
+    end
+    subgraph Rights["Privileges on shop_query_analyzer"]
+        P1["SELECT, INSERT, UPDATE, DELETE<br/>on all tables<br/>EXECUTE on routines"]
+        P2["SELECT on all tables and views<br/>EXECUTE fn_cosine_similarity only<br/>no INSERT, UPDATE, DELETE"]
+        P3["SELECT on customers, products,<br/>orders, order_items only<br/>no analyzer tables, no writes,<br/>no DDL, no routines"]
+    end
+    U1 --> R1 --> P1
+    U2 --> R2 --> P2
+    U3 --> R3 --> P3
+    W1["Used by the web app<br/>to store runs and plans"] -.-> U1
+    W2["Used in the terminal demo<br/>to show a read-only user"] -.-> U2
+    W3["Used by the web app to execute<br/>the user's SQL safely"] -.-> U3
+    classDef a fill:#dbe7ff,stroke:#1d5fd1,color:#102a6b
+    classDef b fill:#fdf1d8,stroke:#8a5a00,color:#5a3b05
+    classDef c fill:#e4f5ea,stroke:#0b6b4d,color:#0d4a23
+    classDef n fill:#eee,stroke:#555,color:#222
+    class U1,U2,U3 a
+    class R1,R2,R3 b
+    class P1,P2,P3 c
+    class W1,W2,W3 n

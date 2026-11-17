@@ -1,0 +1,83 @@
+erDiagram
+    CUSTOMERS ||--o{ ORDERS : "places"
+    ORDERS ||--|{ ORDER_ITEMS : "contains"
+    PRODUCTS ||--o{ ORDER_ITEMS : "appears in"
+    SAVED_QUERIES ||--o{ QUERY_EXECUTIONS : "is run as"
+    QUERY_EXECUTIONS ||--|| QUERY_PLANS : "has"
+    QUERY_EXECUTIONS ||--o{ EXECUTION_TABLE_ACCESS : "reads tables via"
+    SAVED_QUERIES ||--o{ RECOMMENDATIONS : "receives"
+
+    CUSTOMERS {
+        int customer_id PK
+        varchar name
+        varchar email UK
+        varchar city
+        date signup_date
+    }
+    PRODUCTS {
+        int product_id PK
+        varchar name
+        varchar category
+        decimal price
+        int stock
+    }
+    ORDERS {
+        int order_id PK
+        int customer_id FK
+        date order_date
+        enum status
+        decimal total_amount
+    }
+    ORDER_ITEMS {
+        int item_id PK
+        int order_id FK
+        int product_id FK
+        smallint quantity
+        decimal unit_price
+    }
+    SAVED_QUERIES {
+        int query_id PK
+        varchar label
+        text sql_text
+        char query_hash UK
+        tinyint is_preset
+        json embedding
+    }
+    QUERY_EXECUTIONS {
+        bigint execution_id PK
+        int query_id FK
+        timestamp executed_at
+        decimal duration_ms
+        bigint rows_returned
+        bigint rows_examined
+        decimal estimated_cost
+        bigint estimated_rows
+        varchar run_note
+    }
+    QUERY_PLANS {
+        bigint plan_id PK
+        bigint execution_id FK
+        mediumtext plan_text
+        json plan_json
+        varchar server_version
+    }
+    EXECUTION_TABLE_ACCESS {
+        bigint access_id PK
+        bigint execution_id FK
+        varchar table_name
+        varchar access_method
+        varchar index_name
+        varchar filter_condition
+        bigint rows_examined
+        bigint rows_kept
+        bigint loops
+        text explanation
+    }
+    RECOMMENDATIONS {
+        bigint rec_id PK
+        int query_id FK
+        varchar suggestion
+        enum severity
+        enum status
+        timestamp created_at
+    }

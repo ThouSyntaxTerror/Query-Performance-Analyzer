@@ -1,0 +1,28 @@
+flowchart TD
+    A["User chooses a preset, pastes SQL<br/>or uploads a .sql file"] --> B{"SQL guard:<br/>one SELECT or WITH,<br/>no forbidden keywords?"}
+    B -- "No" --> X1["Rejected with a clear message<br/>nothing reaches MySQL"]
+    B -- "Yes" --> C["Connect as qa_runner<br/>START TRANSACTION READ ONLY<br/>max_execution_time = 5000 ms"]
+    C --> D["EXPLAIN ANALYZE query<br/>MySQL really executes it"]
+    D --> E{"Stopped at the<br/>5 second limit?"}
+    E -- "Yes" --> X2["Partial plan discarded<br/>nothing stored"]
+    E -- "No" --> F["Parse the plan text<br/>each line: estimate (cost, rows)<br/>and measured (time, rows, loops)"]
+    F --> G["Work out per table:<br/>access method, index, filter,<br/>rows examined and kept, reason"]
+    G --> H["Connect as qa_app, one transaction"]
+    H --> I["CALL sp_save_query<br/>same text = same saved query"]
+    I --> J["CALL sp_log_execution<br/>run + raw plan stored"]
+    J --> K["INSERT execution_table_access<br/>one row per table access"]
+    K --> L{"MySQL triggers"}
+    L --> M["trg_exec_after_insert<br/>slow or wasteful run?"]
+    L --> N["trg_access_after_insert<br/>large full table scan?"]
+    M --> O["recommendations rows"]
+    N --> O
+    O --> P["COMMIT, then read everything back<br/>from the database"]
+    P --> Q["Page shows measured values,<br/>estimates, plan, reasons,<br/>recommendations, similar queries"]
+    classDef a fill:#dbe7ff,stroke:#1d5fd1,color:#102a6b
+    classDef b fill:#fdf1d8,stroke:#8a5a00,color:#5a3b05
+    classDef bad fill:#fbe9e7,stroke:#b3261e,color:#6b1a14
+    classDef ok fill:#e4f5ea,stroke:#0b6b4d,color:#0d4a23
+    class A,C,D,F,G,H a
+    class I,J,K,L,M,N,O,P b
+    class X1,X2 bad
+    class Q ok

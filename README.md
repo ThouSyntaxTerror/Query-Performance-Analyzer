@@ -1,36 +1,94 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MySQL Query Analyzer
 
-## Getting Started
+A one-page web app that runs a SQL query on a **real MySQL 8.0 database**, shows how MySQL executed it (the actual `EXPLAIN ANALYZE` plan), and explains why rows were examined. The web app and the MySQL terminal use the **same database**, `shop_query_analyzer`.
 
-First, run the development server:
+![Single analysis](docs/img/ui_single_analysis.png)
+
+## What you can do
+
+| On the page | What happens in MySQL |
+|---|---|
+| Pick a preset, paste SQL or upload a `.sql` file, press Run | `EXPLAIN ANALYZE` executes the query as a read-only account |
+| Read the result | Measured time, rows examined versus returned, access method, index, filter, and the reason, kept apart from the optimizer's estimates |
+| Compare two queries or two runs | Side-by-side table of measured values, for example before and after an index |
+| Look at the priority table | A MySQL view ranks queries by total time (runs multiplied by average time) |
+
+## How it fits together
+
+![Architecture](docs/img/architecture.png)
+
+## What happens when you press Run
+
+![Workflow](docs/img/workflow.png)
+
+## Measured values versus estimates
+
+Every plan line has two brackets. The estimate is a guess made before running; the measured part was counted while MySQL executed the query. The page labels them differently and only ever treats measured values as results.
+
+![Reading a plan line](docs/img/plan_reading.png)
+
+## Comparing two runs (before and after an index)
+
+![Compare runs](docs/img/ui_compare_runs.png)
+
+## Database
+
+Nine tables: the four shop tables and five analyzer tables.
+
+![ER model](docs/img/er_model.png)
+
+Three accounts with different privileges, enforced by MySQL:
+
+![Accounts and roles](docs/img/permissions.png)
+
+## Setup (once)
+
+Needs Node.js 20 or newer and the MySQL 8.0 service running on port 3306.
+
+1. Install packages:
+
+```bash
+npm install
+```
+
+2. Enter your MySQL root password **locally**. It is never typed into chat and never committed. In PowerShell, in this project folder:
+
+```bash
+copy .env.local.example .env.local
+notepad .env.local
+```
+
+   Replace `PUT_YOUR_ROOT_PASSWORD_HERE` with your root password, keep the double quotes, save, close. `.env.local` is ignored by Git.
+
+3. Create the database, tables, data, accounts and permissions (root is used for this step only):
+
+```bash
+npm run setup
+```
+
+   This never drops anything. If a database called `shop_query_analyzer` already exists and is not this project's, it stops and changes nothing. It generates passwords for the three restricted accounts and saves them to `.env.local`.
+
+4. Record measured sample runs (real `EXPLAIN ANALYZE` executions of the preset queries):
+
+```bash
+npm run warmup
+```
+
+5. Start the page and open http://localhost:3200:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Files
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+| Path | Purpose |
+|---|---|
+| `sql/01_schema.sql` to `sql/10_crud_demo.sql` | Setup, seed data, stored logic, permissions, presets, three queries, index before/after, cleanup, DDL and CRUD demos |
+| `lib/` | SQL guard, plan parser, analysis pipeline, database pools |
+| `app/` | The one-page interface and its four API routes |
+| `scripts/` | `setup`, `warmup` and a helper to run the `mysql` client with the saved password |
+| `docs/REPORT.md` | Complete technical report |
+| `docs/DEMO_GUIDE.md` | Live-demo script with exact commands |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Run a terminal command with a saved password without typing it: `npm run mysql -- --as root -e "SHOW DATABASES"`.
