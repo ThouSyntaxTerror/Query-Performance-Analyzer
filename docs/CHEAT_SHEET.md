@@ -27,7 +27,7 @@ cd "C:\Users\athar\OneDrive\Desktop\dhjhg\dbms\mini project\mysql-query-analyzer
 
 Under the score: **Why this score**, **Suggested changes**, then **Analysis** (four scores, access type, totals).
 
-## Part B: MySQL terminal. Five commands, each prints its own headings.
+## Part B: MySQL terminal. Six commands, each prints its own headings.
 ```sql
 SOURCE sql/demo_1.sql;
 ```
@@ -52,6 +52,11 @@ Insert, select, update, delete, then cascade and restrict on foreign keys.
 SOURCE sql/demo_5.sql;
 ```
 JSON plans queried with `JSON_EXTRACT`, embeddings, and create/read/update/delete with cosine similarity.
+
+```sql
+SOURCE sql/demo_6.sql;
+```
+**Triggers firing live and joins.** It shows the trigger code, inserts a test run that reads 60,000 rows to return 1, and the recommendation rows appear by themselves (two triggers fire); then `ROLLBACK` removes everything. Then an inner join, a left join, a three-table join with `GROUP BY`, and a join on a view. **Say: "I never wrote those recommendations; the trigger did."**
 
 ## Part C: the index fix (2 minutes). Three commands, then clean up.
 1. Website: run the March query (score about 45 to 50).
