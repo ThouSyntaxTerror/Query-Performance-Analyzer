@@ -8,9 +8,11 @@
     "start": "next start",
     "setup": "node scripts/setup.mjs",
     "warmup": "node scripts/warmup.mjs",
-    "mysql": "node scripts/mysql-cli.mjs"
+    "mysql": "node scripts/mysql-cli.mjs",
+    "mongo:sync": "node scripts/mongo-sync.mjs"
   },
   "dependencies": {
+    "mongodb": "^7.9.0",
     "mysql2": "^3.24.6",
     "next": "16.4.6",
     "react": "19.3.0",

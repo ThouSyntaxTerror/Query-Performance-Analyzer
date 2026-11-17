@@ -243,6 +243,7 @@ export function AnalysisPanel({ run }) {
         <span><b>{fmt(m.totals.rows_examined)}</b> rows examined</span>
         <span><b>{fmt(m.totals.rows_returned)}</b> rows returned</span>
         <span><b>{fmt(m.totals.total_ms)}</b> ms spent</span>
+        {m.totals.mongo_documents != null && <span><b>{fmt(m.totals.mongo_documents)}</b> plan documents in MongoDB</span>}
       </div>
     </div>
   );

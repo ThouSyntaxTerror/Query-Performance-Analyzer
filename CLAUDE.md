@@ -14,6 +14,12 @@ The web app and the MySQL terminal use the same database. No login, no admin pag
 - Local git repo only, no remote. DO NOT PUSH until the user gives a repository URL.
 - Nothing destructive outside the new database was ever done; other databases (company, hostel, nested, sample, smart_hostel) are untouched.
 
+## NoSQL (MongoDB 8.2, local service, no auth)
+- Requirement from the instructor PDF: SQL + NoSQL (+ vector). MongoDB database `shop_query_analyzer_docs`, collection `plans`, one document per run
+  (lib/mongo.mjs, written after the MySQL commit in analyzer.mjs; failures are logged, not fatal). Other Mongo databases on the machine
+  (collegeDB, genztech, simplebank) belong to the user: never touch them.
+- `npm run mongo:sync` upserts all MySQL runs, creates indexes, deletes stale docs. Model: docs/NOSQL_MODEL.md. Web login is intentionally NOT built (user decision).
+
 ## Secrets (important)
 - `.env.local` (Git-ignored) holds MYSQL_ROOT_PASSWORD (entered by the user) and generated QA_APP/QA_VIEWER/QA_RUNNER passwords.
 - NEVER print, echo, cat or Read `.env.local`, never put its values in commits, docs or chat. Use `npm run mysql -- --as root -e "..."`

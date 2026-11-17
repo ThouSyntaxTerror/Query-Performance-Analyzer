@@ -16,13 +16,14 @@ flowchart TD
     L --> N["trg_access_after_insert<br/>large full table scan?"]
     M --> O["recommendations rows"]
     N --> O
-    O --> P["COMMIT, then read everything back<br/>from the database"]
-    P --> Q["Page shows measured values,<br/>estimates, plan, reasons,<br/>recommendations, similar queries"]
+    O --> P["COMMIT, then read everything back<br/>from MySQL"]
+    P --> P2["Save the same run as one document<br/>in MongoDB (collection plans)"]
+    P2 --> Q["Page shows measured values,<br/>estimates, plan, reasons,<br/>recommendations, similar queries"]
     classDef a fill:#dbe7ff,stroke:#1d5fd1,color:#102a6b
     classDef b fill:#fdf1d8,stroke:#8a5a00,color:#5a3b05
     classDef bad fill:#fbe9e7,stroke:#b3261e,color:#6b1a14
     classDef ok fill:#e4f5ea,stroke:#0b6b4d,color:#0d4a23
     class A,C,D,F,G,H a
-    class I,J,K,L,M,N,O,P b
+    class I,J,K,L,M,N,O,P,P2 b
     class X1,X2 bad
     class Q ok

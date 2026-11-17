@@ -63,3 +63,18 @@ JOIN saved_queries b ON b.query_id <> a.query_id
 WHERE a.label LIKE 'Join: orders of Pune%'
 ORDER BY similarity DESC
 LIMIT 5;
+
+-- ---------------------------------------------------------------------
+-- Bonus: HAVING  (filters groups after GROUP BY)
+-- Queries that have been run at least 5 times, most-run first.
+-- WHERE filters rows before grouping; HAVING filters the groups themselves.
+-- ---------------------------------------------------------------------
+SELECT q.label,
+       COUNT(*)                     AS runs,
+       ROUND(AVG(e.duration_ms), 2) AS avg_ms,
+       SUM(e.rows_examined)         AS rows_examined
+FROM saved_queries q
+JOIN query_executions e ON e.query_id = q.query_id
+GROUP BY q.query_id, q.label
+HAVING COUNT(*) >= 5
+ORDER BY runs DESC;

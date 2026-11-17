@@ -42,6 +42,12 @@ SHOW CREATE TABLE orders\G
 SELECT c.name, o.order_id, o.total_amount FROM customers c JOIN orders o ON o.customer_id = c.customer_id WHERE c.city = 'Pune' LIMIT 5;
 ```
 
+**2b. GROUP BY with HAVING**
+```sql
+SELECT q.label, COUNT(*) AS runs, ROUND(AVG(e.duration_ms), 2) AS avg_ms, SUM(e.rows_examined) AS rows_examined FROM saved_queries q JOIN query_executions e ON e.query_id = q.query_id GROUP BY q.query_id, q.label HAVING COUNT(*) >= 5 ORDER BY runs DESC;
+```
+Say: "WHERE filters rows before grouping; HAVING filters the groups: only queries run at least 5 times."
+
 **3. Trigger: show it, then make it fire** (capital G)
 ```sql
 SHOW TRIGGERS\G
@@ -76,13 +82,30 @@ UPDATE customers SET city = 'Mumbai' WHERE email = 'demo@mail.test';
 DELETE FROM customers WHERE email = 'demo@mail.test';
 ```
 
-**7. NoSQL / vector**
+**7. NoSQL (MongoDB): open a third PowerShell window and type `mongosh`**
+```js
+use shop_query_analyzer_docs
+db.plans.countDocuments()
+db.plans.findOne({ execution_id: 1 }, { label: 1, rating: 1, tables: 1, _id: 0 })
+db.plans.aggregate([{ $unwind: '$tables' }, { $match: { 'tables.type': 'ALL' } }, { $group: { _id: '$tables.table', scans: { $sum: 1 } } }, { $sort: { scans: -1 } }])
+db.plans.distinct('label', { $text: { $search: 'wildcard' } })
+db.plans.getIndexes().map(i => i.name)
+```
+Say: "Each analysed run is also saved in MongoDB as one nested document, same execution id as in MySQL. MySQL keeps the related, constrained data; MongoDB keeps the whole run as a document. The aggregation counts full table scans per table."
+
+Create, update, delete a document:
+```js
+db.plans.insertOne({ demo: true, label: 'demo document' })
+db.plans.updateOne({ demo: true }, { $set: { note: 'edited' } })
+db.plans.deleteOne({ demo: true })
+```
+
+**8. Vector (back in the MySQL window)**
 ```sql
-SELECT execution_id, JSON_UNQUOTE(JSON_EXTRACT(plan_json, '$[0].description')) AS root_step, JSON_EXTRACT(plan_json, '$[0].measured.endMs') AS root_ms FROM query_plans LIMIT 3;
 SELECT query_id, JSON_LENGTH(embedding) AS dimensions, embedding FROM saved_queries WHERE query_id = 5;
 SELECT b.label, ROUND(fn_cosine_similarity(a.embedding, b.embedding), 3) AS similarity FROM saved_queries a JOIN saved_queries b ON b.query_id <> a.query_id WHERE a.query_id = 5 ORDER BY similarity DESC LIMIT 3;
 ```
-Say: "The plan is a JSON document. Each query is a 30-number vector. Cosine similarity finds queries shaped alike."
+Say: "Each query is a 30-number vector. Cosine similarity finds queries shaped alike."
 
 (The `sql/demo_*.sql` files do the same thing in one command each; keep them as a backup only.)
 

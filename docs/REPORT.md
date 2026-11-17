@@ -28,6 +28,7 @@ Everything lives in one real MySQL database, `shop_query_analyzer`. The web page
 | MySQL | Account `qa_runner` | Executes user SQL: `SELECT` on four tables only, read-only transaction, 5 second limit |
 | MySQL | Account `qa_app` | Stores runs through stored procedures and table inserts |
 | MySQL | Account `qa_viewer`, root | Terminal demonstration and setup |
+| MongoDB | Database `shop_query_analyzer_docs`, collection `plans` | One document per analysed run, written after the MySQL transaction commits (`lib/mongo.mjs`); data model in `docs/NOSQL_MODEL.md` |
 | MySQL | Stored logic | 3 functions (one is a helper), 4 procedures, 2 triggers, 1 view |
 
 ## 3. Workflow
@@ -127,7 +128,7 @@ Relationships: one customer places many orders; an order contains many items; a 
 | DDL with PK, FK (RESTRICT, CASCADE), UNIQUE, CHECK, ENUM, DEFAULT, JSON, composite and secondary indexes | `sql/01_schema.sql` |
 | `INSERT ... WITH RECURSIVE ... SELECT` with deterministic arithmetic (no `RAND()`) | `sql/02_seed.sql` |
 | `INSERT`, `UPDATE`, `DELETE`, `SELECT` | `sql/10_crud_demo.sql`, the application's inserts and reads |
-| Joins, aggregation, `GROUP BY`, window functions (`RANK() OVER`, `SUM() OVER`) | `sql/06_three_queries.sql` Q1, `v_workload_priority` |
+| Joins, aggregation, `GROUP BY`, `HAVING`, window functions (`RANK() OVER`, `SUM() OVER`) | `sql/06_three_queries.sql` Q1 and the `HAVING` bonus query, `v_workload_priority` |
 | Correlated subqueries | Q2 |
 | CTE, correlated and scalar subqueries, `LIKE` | preset queries in `sql/05_presets.sql` |
 | `JSON_TABLE` | `fn_cosine_similarity` |
@@ -186,6 +187,15 @@ Checked on nine queries on the real server: the indexed lookup scored 100, the M
 | Totals so far | `COUNT`, `COUNT(DISTINCT query_id)`, `SUM(rows_examined)`, `SUM(rows_returned)`, `SUM(duration_ms)` over `query_executions` | workload statistics |
 
 Since every query on this page is a read-only `SELECT`, "rows affected" is the number of rows returned; no rows are modified.
+
+## 6d. NoSQL: MongoDB
+
+The project uses two database paradigms. MySQL stores the related, constrained facts. MongoDB stores each analysed run as one nested document (plan tree, metrics, rating, suggestions, per-table accesses, embedding), because a run is a self-contained record with a variable-length plan, which suits a document store better than seven joined tables.
+
+- Full description of collections, documents, indexes (unique, compound, multikey, full-text), embeddings, metadata and retrieval: `docs/NOSQL_MODEL.md`.
+- NoSQL operations demonstrated in `mongosh`: `find`, an aggregation pipeline (`$unwind`, `$match`, `$group`, `$sort`), full-text search with `$text`, and `insertOne` / `updateOne` / `deleteOne`.
+- Consistency: MySQL is written first and is the source of truth; the same run is then saved to MongoDB with the same `execution_id`. A MongoDB outage does not stop an analysis. `npm run mongo:sync` upserts every MySQL run, creates the indexes and removes documents whose run no longer exists, then prints both counts.
+- Checked: one run analysed through the page produced a MySQL row and a MongoDB document with the same execution id, duration and row counts (execution 100: 25.7 ms, 50,000 rows examined, 1 returned), and both stores held 75 runs; after cleanup both held 74.
 
 ## 7. Measured values versus estimates
 
@@ -254,6 +264,7 @@ Run times vary from run to run by a few milliseconds; the figures above are sing
 | At least one trigger, procedure and function (project specific) | `trg_exec_after_insert`, `trg_access_after_insert`; `sp_log_execution`, `sp_workload_priority`; `fn_cosine_similarity`; section 5 above |
 | Two MySQL users/roles with different GRANT privileges | `qa_app`/`qa_app_role` versus `qa_viewer`/`qa_viewer_role` (plus `qa_runner`); `sql/04_permissions.sql`; demo guide section 2 |
 | INSERT, UPDATE, DELETE, SELECT demonstrable | `sql/10_crud_demo.sql`; demo guide section 5 |
+| NoSQL database (second paradigm), data model, indexes, aggregation | MongoDB collection `plans`; `lib/mongo.mjs`; `docs/NOSQL_MODEL.md`; `mongosh` demo in `docs/CHEAT_SHEET.md` |
 | Cosine similarity or another next-generation feature in MySQL, with create/read/update/delete | `fn_query_embedding`, `fn_cosine_similarity`; section 6 above; `sql/12_vector_ops.sql` |
 | Foreign keys and cascading | `sql/01_schema.sql` (`CASCADE`, `RESTRICT`); `sql/11_cascade_demo.sql` |
 | Useful real-world analysis prioritising repeated costly queries | `v_workload_priority`, `sp_workload_priority`, query Q1 in the terminal |

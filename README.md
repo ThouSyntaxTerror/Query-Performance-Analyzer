@@ -44,9 +44,9 @@ Every plan line has two brackets. The estimate is a guess made before running; t
 
 ![Reading a plan line](docs/img/plan_reading.png)
 
-## Database
+## Databases (SQL + NoSQL)
 
-Nine tables: the four shop tables and five analyzer tables.
+**MySQL** holds nine tables: the four shop tables and five analyzer tables. **MongoDB** holds one nested document per analysed run (plan tree, metrics, rating, suggestions, embedding) in the collection `plans`. The data model, indexes, embeddings and retrieval strategy are in [docs/NOSQL_MODEL.md](docs/NOSQL_MODEL.md).
 
 ![ER model](docs/img/er_model.png)
 
@@ -56,7 +56,7 @@ Three accounts with different privileges, enforced by MySQL:
 
 ## Setup (once)
 
-Needs Node.js 20 or newer and the MySQL 8.0 service running on port 3306.
+Needs Node.js 20 or newer, the MySQL 8.0 service on port 3306 and a local MongoDB (default `mongodb://127.0.0.1:27017`, no login). MongoDB only gets its own new database, `shop_query_analyzer_docs`.
 
 1. Install packages:
 
@@ -87,7 +87,13 @@ npm run setup
 npm run warmup
 ```
 
-5. Start the page and open http://localhost:3200 (black and red page: a query box, an Analyze button, then the report):
+5. Copy the stored runs into MongoDB as documents (also creates its indexes; safe to repeat):
+
+```bash
+npm run mongo:sync
+```
+
+6. Start the page and open http://localhost:3200 (black and red page: a query box, an Analyze button, then the report):
 
 ```bash
 npm run dev

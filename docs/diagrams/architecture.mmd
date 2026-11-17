@@ -1,6 +1,6 @@
 flowchart TD
     subgraph Client["Browser"]
-        UI["One-page Next.js interface<br/>presets, paste or upload SQL,<br/>compare queries or runs"]
+        UI["One-page Next.js interface<br/>paste or upload SQL, get a rating,<br/>suggestions and analysis"]
     end
     subgraph Server["Next.js server (route handlers)"]
         API["/api/analyze  /api/state<br/>/api/runs  /api/run/:id"]
@@ -16,7 +16,8 @@ flowchart TD
             LOGIC["Stored logic<br/>functions, procedures,<br/>2 triggers, 1 view"]
         end
     end
-    TERM["MySQL terminal<br/>root and qa_viewer<br/>same database, same rows"]
+    MONGO["MongoDB 8.2<br/>database shop_query_analyzer_docs<br/>collection plans: one document per run"]
+    TERM["MySQL terminal and mongosh<br/>same data as the page"]
     UI -->|"JSON"| API
     API --> GUARD
     GUARD -->|"validated SQL"| RUNNER
@@ -25,12 +26,16 @@ flowchart TD
     PARSE -->|"metrics"| APP
     APP -->|"CALL sp_save_query, sp_log_execution<br/>INSERT table accesses"| ANA
     ANA --- LOGIC
+    PARSE -->|"same run as a document"| MONGO
     TERM --- DB
+    TERM --- MONGO
     classDef ui fill:#dbe7ff,stroke:#1d5fd1,color:#102a6b
     classDef srv fill:#e4f5ea,stroke:#0b6b4d,color:#0d4a23
     classDef db fill:#fdf1d8,stroke:#8a5a00,color:#5a3b05
+    classDef nosql fill:#e6f2e6,stroke:#2e7d32,color:#1b4d1e
     classDef term fill:#eee,stroke:#555,color:#222
     class UI ui
     class API,GUARD,PARSE srv
     class RUNNER,APP,SHOP,ANA,LOGIC db
+    class MONGO nosql
     class TERM term
