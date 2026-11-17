@@ -169,6 +169,24 @@ Suggestions come from the same inputs: an index on the filtered columns (with th
 
 Checked on nine queries on the real server: the indexed lookup scored 100, the March scan 50 with `CREATE INDEX ... orders (order_date)`, the Pune join 70 with an index on `customers(city)`, a leading-wildcard `LIKE` 65, a `DATE_FORMAT` filter 50 with the function warning. The score weights are a judgement; they can be tuned.
 
+## 6c. Analysis metrics
+
+`lib/metrics.mjs` derives these from a stored run; the workload score and the totals come from MySQL itself (the view `v_workload_priority` and aggregates over `query_executions`).
+
+| Metric | Formula | DBMS term |
+|---|---|---|
+| Scan efficiency | rows kept ÷ rows examined | filter selectivity applied to the whole query |
+| Selectivity (per table) | rows kept ÷ rows examined at that access, only when a filter exists | predicate selectivity |
+| Optimizer accuracy | for every plan step with an estimate and a measurement: q-error = max(estimated ÷ actual, actual ÷ estimated); the worst step is shown, the geometric mean is computed | cardinality estimation error |
+| Cost per 1,000 rows | duration_ms ÷ rows examined × 1,000 | processing cost per row |
+| Workload priority | rank, runs, average and share of `SUM(duration_ms)` from the view | repeated cost / workload impact |
+| Access type | `Table scan` = ALL, `Index range scan` = range, `Index lookup` = ref, `Single-row index lookup` = eq_ref, `Constant row` = const, `Index scan` = index | EXPLAIN access type (traditional names; the mapping from the tree format is an interpretation) |
+| Execution features | join algorithm (nested loop, hash join) and how many times its inner side ran; temporary table; sort; materialized CTE; covering index | join algorithm, filesort, temporary table |
+| Columns returned | names read from the prepared-statement metadata (`PREPARE` parses the query without running it) | result schema |
+| Totals so far | `COUNT`, `COUNT(DISTINCT query_id)`, `SUM(rows_examined)`, `SUM(rows_returned)`, `SUM(duration_ms)` over `query_executions` | workload statistics |
+
+Since every query on this page is a read-only `SELECT`, "rows affected" is the number of rows returned; no rows are modified.
+
 ## 7. Measured values versus estimates
 
 | Value | Kind | Source |

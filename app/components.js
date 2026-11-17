@@ -166,3 +166,84 @@ export function RatingCard({ run }) {
     </div>
   );
 }
+
+// ---------------------------------------------------------------- DBMS analysis: scores, access paths, totals
+const pct = (v) => (v == null ? 'n/a' : `${v >= 10 ? Math.round(v) : v.toFixed(1)}%`);
+
+function Tile({ big, label, note }) {
+  return (
+    <div className="stat">
+      <b>{big}</b>
+      <span><strong>{label}</strong><br />{note}</span>
+    </div>
+  );
+}
+
+export function AnalysisPanel({ run }) {
+  const m = run.metrics;
+  const e = run.execution;
+  const w = m.workload;
+  const a = m.accuracy;
+  const f = m.features;
+  const tables = [...new Set(m.accessPaths.map((p) => p.table))];
+  const feats = [
+    f.joins.length ? `${f.joins.join(' + ')} (inner side ran ${fmt(f.innerLoops)} time${f.innerLoops === 1 ? '' : 's'})` : null,
+    f.temporaryTable ? 'temporary table' : null,
+    f.sort ? 'sort (filesort)' : null,
+    f.materialize ? 'materialized CTE' : null,
+    f.aggregate ? 'aggregation' : null,
+    f.coveringIndex ? 'covering index (index-only read)' : null,
+  ].filter(Boolean);
+
+  return (
+    <div>
+      <h3>Scores</h3>
+      <div className="grid g4">
+        <Tile big={pct(m.scanEfficiency)} label="Scan efficiency"
+          note={`${fmt(m.kept)} rows kept of ${fmt(m.examined)} examined. Low means rows were read only to be discarded.`} />
+        <Tile big={a.worst ? `x${a.worst.q.toFixed(1)}` : 'n/a'} label="Optimizer accuracy (q-error)"
+          note={a.worst ? `Worst step: "${a.worst.step.slice(0, 48)}": expected ${fmt(Math.round(a.worst.est))} rows, got ${fmt(Math.round(a.worst.act))}. x1.0 is exact.` : 'No step has both an estimate and a measurement.'} />
+        <Tile big={m.costPer1000 == null ? 'n/a' : `${ms(m.costPer1000)} ms`} label="Cost per 1,000 rows"
+          note="Measured time divided by rows examined, times 1,000." />
+        <Tile big={w ? `#${w.priority_rank} of ${w.ofTotal}` : 'n/a'} label="Workload priority"
+          note={w ? `${fmt(w.runs)} run${w.runs === 1 ? '' : 's'}, average ${ms(w.avg_ms)} ms, ${w.pct_of_workload}% of all stored time (runs x average time).` : 'Not ranked yet.'} />
+      </div>
+
+      <h3>This run</h3>
+      <table><tbody>
+        <tr><td className="muted">Rows returned</td><td className="num">{fmt(e.rows_returned)}</td>
+          <td className="muted">Columns returned</td><td className="num">{m.columns ? `${m.columns.count} (${m.columns.names.join(', ')})` : 'n/a'}</td></tr>
+        <tr><td className="muted">Rows examined</td><td className="num">{fmt(m.examined)}</td>
+          <td className="muted">Tables accessed</td><td className="num">{tables.length} ({tables.join(', ')})</td></tr>
+        <tr><td className="muted">Execution time</td><td className="num">{ms(e.duration_ms)} ms</td>
+          <td className="muted">Execution features</td><td className="num">{feats.length ? feats.join('; ') : 'none'}</td></tr>
+      </tbody></table>
+
+      <h3>How MySQL executed it</h3>
+      <table>
+        <thead><tr><th>Table</th><th>Access type</th><th>Index</th><th className="num">Examined</th><th className="num">Kept</th><th className="num">Selectivity</th><th className="num">Loops</th></tr></thead>
+        <tbody>
+          {m.accessPaths.map((p, i) => (
+            <tr key={i}>
+              <td><b>{p.table}</b></td>
+              <td><span className={`badge ${p.type === 'ALL' ? 'scan' : 'idx'}`}>{p.type}</span> <span className="muted">{p.method}</span></td>
+              <td>{p.index ? <code>{p.index}</code> : <span className="muted">none</span>}</td>
+              <td className="num">{fmt(p.examined)}</td><td className="num">{fmt(p.kept)}</td>
+              <td className="num">{p.selectivity == null ? <span className="muted">no filter</span> : pct(p.selectivity)}</td>
+              <td className="num">{fmt(p.loops)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <h3>All queries run so far (from the MySQL database)</h3>
+      <div className="totals">
+        <span><b>{fmt(m.totals.runs)}</b> queries run</span>
+        <span><b>{fmt(m.totals.queries)}</b> distinct</span>
+        <span><b>{fmt(m.totals.rows_examined)}</b> rows examined</span>
+        <span><b>{fmt(m.totals.rows_returned)}</b> rows returned</span>
+        <span><b>{fmt(m.totals.total_ms)}</b> ms spent</span>
+      </div>
+    </div>
+  );
+}

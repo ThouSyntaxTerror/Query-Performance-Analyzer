@@ -16,6 +16,18 @@ A one-page web app. You paste a SQL query; it runs it on a **real MySQL 8.0 data
 
 The score starts at 100 and loses points for measured problems: slow run time, rows read and then thrown away by a filter, whole-table scans of big tables, `SELECT *`, correlated subqueries, and large results with no `LIMIT`. Each lost point is listed with its reason. The thresholds are in `lib/rating.mjs`.
 
+Below the rating, an **Analysis** section gives the DBMS view of the same run, all computed from the measured plan and the stored runs:
+
+| Metric | Meaning |
+|---|---|
+| Scan efficiency | rows kept by the filter divided by rows examined |
+| Optimizer accuracy (q-error) | how many times too high or too low the optimizer's row estimate was, at its worst plan step |
+| Cost per 1,000 rows | measured time divided by rows examined, times 1,000 |
+| Workload priority | rank by total time (runs multiplied by average time) among all stored queries, read from a MySQL view |
+| Access type, index, selectivity | per table: `ALL`, `range`, `ref`, `eq_ref`, `const` or `index`, the index used, share of rows passing the filter |
+| Rows and columns returned, tables accessed, execution features | columns come from MySQL prepared-statement metadata; features include join algorithm, temporary table, sort |
+| Totals so far | queries run, distinct queries, rows examined and returned, time spent, counted by MySQL |
+
 ![Technical details](docs/img/ui_details.png)
 
 ## How it fits together

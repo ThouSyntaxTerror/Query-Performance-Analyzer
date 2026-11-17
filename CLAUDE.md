@@ -35,7 +35,7 @@ node docs/screenshots.mjs <runIdBefore> <runIdAfter>   # needs the app running o
 ## Layout
 - `sql/01_schema.sql` ... `10_crud_demo.sql`: all SQL (schema, seed, stored logic, permissions, presets, 3 queries, index before/after, cleanup, DDL demo, CRUD demo).
 - `lib/sqlguard.mjs` (one read-only SELECT/WITH only), `lib/plan.mjs` (EXPLAIN ANALYZE parser + reasons), `lib/analyzer.mjs` (pipeline), `lib/db.mjs` (two pools), `lib/api.mjs`.
-- `app/page.js` (minimal), `app/components.js` (QueryInput, RatingCard, RunView), `lib/rating.mjs`, `app/api/{state,analyze,runs,run/[id]}/route.js`.
+- `app/page.js` (minimal), `app/components.js` (QueryInput, RatingCard, RunView), `lib/rating.mjs` (score + suggestions), `lib/metrics.mjs` (scores: scan efficiency, q-error, cost per 1000 rows, workload rank; access types; totals), `app/api/{state,analyze,runs,run/[id]}/route.js`.
 - `scripts/setup.mjs`, `warmup.mjs`, `mysql-cli.mjs`, `_env.mjs`.
 - `docs/`: REPORT.md, DEMO_GUIDE.md, diagrams/*.mmd, img/*.png.
 

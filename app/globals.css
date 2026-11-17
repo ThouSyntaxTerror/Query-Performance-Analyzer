@@ -80,3 +80,8 @@ th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spa
 details summary { list-style: none; }
 details summary::before { content: '+ '; color: var(--red); font-weight: 700; }
 details[open] summary::before { content: '- '; }
+
+.stat span strong { color: var(--ink); font-weight: 600; }
+.stat b { font-size: 26px; }
+.totals { display: flex; gap: 8px 26px; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+.totals b { color: var(--ink); font-size: 18px; font-variant-numeric: tabular-nums; }
