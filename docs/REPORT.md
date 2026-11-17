@@ -9,7 +9,7 @@ A slow query is only useful to fix if you know why it is slow. MySQL can execute
 1. run a query on a realistic shop database,
 2. store the measured run, its plan and the tables it touched,
 3. explain in plain language why rows were examined,
-4. compare two queries or two runs (for example before and after adding an index),
+4. compare two runs (for example before and after adding an index) with a stored procedure,
 5. rank stored queries by **total cost over time** (how often a query runs multiplied by how long it takes), because repeated moderately slow queries often waste more than one very slow query.
 
 Everything lives in one real MySQL database, `shop_query_analyzer`. The web page and the MySQL terminal read and write the same tables.
@@ -20,8 +20,8 @@ Everything lives in one real MySQL database, `shop_query_analyzer`. The web page
 
 | Layer | Component | Responsibility |
 |---|---|---|
-| Browser | One-page Next.js interface (`app/page.js`, `app/components.js`) | Choose or write SQL, show measured and estimated values, compare runs |
-| Server | Route handlers (`app/api/*`) | `/api/analyze`, `/api/state`, `/api/runs`, `/api/run/:id` |
+| Browser | One-page Next.js interface (`app/page.js`, `app/components.js`), black and red | A query box and an Analyze button; shows the report: measured and estimated values, tables accessed with reasons, plan, recommendations, similar queries |
+| Server | Route handlers (`app/api/*`) | `/api/analyze` (used by the page), `/api/state` (preset list), `/api/runs` and `/api/run/:id` (read stored runs) |
 | Server | `lib/sqlguard.mjs` | Accepts exactly one `SELECT` or `WITH ... SELECT`; removes comments and optimizer hints; rejects write, DDL and file keywords |
 | Server | `lib/plan.mjs` | Parses `EXPLAIN ANALYZE` text, splits estimates from measurements, builds per-table reasons |
 | Server | `lib/analyzer.mjs` | Runs the pipeline and reads results back from MySQL |
@@ -218,7 +218,7 @@ Run times vary from run to run by a few milliseconds; the figures above are sing
 | Two MySQL users/roles with different GRANT privileges | `qa_app`/`qa_app_role` versus `qa_viewer`/`qa_viewer_role` (plus `qa_runner`); `sql/04_permissions.sql`; demo guide section 2 |
 | INSERT, UPDATE, DELETE, SELECT demonstrable | `sql/10_crud_demo.sql`; demo guide section 5 |
 | Cosine similarity or another next-generation feature in MySQL | `fn_query_embedding`, `fn_cosine_similarity`; section 6 above |
-| Useful real-world analysis prioritising repeated costly queries | `v_workload_priority`, `sp_workload_priority`, the priority table on the page |
+| Useful real-world analysis prioritising repeated costly queries | `v_workload_priority`, `sp_workload_priority`, query Q1 in the terminal |
 | Setup, seed, stored logic, permissions, queries scripts | `sql/01` to `sql/06` |
 | Index before/after with actual plans, explicit cleanup | `sql/07_index_before_after.sql`, `sql/08_index_cleanup.sql`; demo guide section 6 |
 | Safe CREATE/ALTER/DROP TABLE examples | `sql/09_ddl_demo.sql` |

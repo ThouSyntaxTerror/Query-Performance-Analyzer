@@ -129,16 +129,23 @@ Expected: `ERROR 3819 ... Check constraint 'chk_products_price' is violated.`
 
 ## 6. Index before and after (a real plan change)
 
-On the page, choose **Analyze one query**, pick "Full scan: orders in March 2024", type `before index` in the run label box, press Run. Note: Table scan, 50,000 rows examined.
+On the page, pick the preset "Full scan: orders in March 2024" and press **Analyze**. Note: Table scan, 50,000 rows examined.
 
-In the MySQL terminal:
+In the MySQL terminal, add the index and refresh statistics:
 
 ```sql
 CREATE INDEX idx_demo_orders_order_date ON orders (order_date);
 ANALYZE TABLE orders;
 ```
 
-On the page run the same query again with the label `after index`. Note: Index range scan, about 2,123 rows examined. Then choose **Compare two runs**, pick that query, pick the `before index` run as A and the `after index` run as B, press Run and compare.
+On the page press **Analyze** on the same query again. Note: Index range scan, about 2,123 rows examined. Then compare the two stored runs in the terminal (use the two newest ids of that query):
+
+```sql
+SELECT execution_id, duration_ms, rows_examined FROM query_executions WHERE query_id = 1 ORDER BY execution_id DESC LIMIT 2;
+CALL sp_compare_executions(<older id>, <newer id>);
+```
+
+The first column pair is the old and new time, the next the old and new rows examined, with the percentage change.
 
 **Clean up (always):**
 

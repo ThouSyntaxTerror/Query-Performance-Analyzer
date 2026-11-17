@@ -1,12 +1,11 @@
 // Takes the README screenshots of the running app (npm run dev, port 3200) with headless Edge/Chrome via the DevTools protocol.
-// Usage: node docs/screenshots.mjs <idBefore> <idAfter>   (two run ids of the same query, for the "compare runs" picture)
+// Usage: node docs/screenshots.mjs
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 
 const BASE = 'http://localhost:3200';
 const OUT = path.resolve(import.meta.dirname, 'img');
-const [before, after] = process.argv.slice(2);
 const exe = ['C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', 'C:/Program Files/Microsoft/Edge/Application/msedge.exe', 'C:/Program Files/Google/Chrome/Application/chrome.exe'].find(fs.existsSync);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const profile = path.join(OUT, '..', '.tmp-profile');
@@ -34,25 +33,18 @@ async function shot(name) {
   console.log('saved', name, h);
 }
 
-await cmd('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'light' }] });
+await cmd('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'dark' }] });
 await cmd('Emulation.setDeviceMetricsOverride', { width: 1180, height: 900, deviceScaleFactor: 1, mobile: false });
 await cmd('Page.navigate', { url: BASE });
 await sleep(4000);
 
+await shot('ui_home');                           // empty page: query box and Analyze button
+
 await setSelect(0, '1');                         // preset 1: full scan
 await sleep(300);
-await click('Run analysis');
+await click('Analyze');
 await sleep(4000);
-await shot('ui_single_analysis');
-
-await click('Compare two runs');
-await sleep(500);
-await setSelect(0, '1');                         // query 1 with stored runs
-await sleep(1500);
-if (before && after) { await setSelect(1, before); await setSelect(2, after); }
-await click('Run and compare');
-await sleep(3000);
-await shot('ui_compare_runs');
+await shot('ui_report');
 
 ws.close(); proc.kill();
 await sleep(1500);

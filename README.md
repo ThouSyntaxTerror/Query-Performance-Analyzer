@@ -2,22 +2,21 @@
 
 A one-page web app that runs a SQL query on a **real MySQL 8.0 database**, shows how MySQL executed it (the actual `EXPLAIN ANALYZE` plan), and explains why rows were examined. The web app and the MySQL terminal use the **same database**, `shop_query_analyzer`.
 
-![Single analysis](docs/img/ui_single_analysis.png)
+![Report](docs/img/ui_report.png)
 
 ## What you can do
 
 | On the page | What happens in MySQL |
 |---|---|
-| Pick a preset, paste SQL or upload a `.sql` file, press Run | `EXPLAIN ANALYZE` executes the query as a read-only account |
-| Read the result | Measured time, rows examined versus returned, access method, index, filter, and the reason, kept apart from the optimizer's estimates |
-| Compare two queries or two runs | Side-by-side table of measured values, for example before and after an index |
-| Look at the priority table | A MySQL view ranks queries by total time (runs multiplied by average time) |
+| Pick a preset, paste SQL or upload a `.sql` file, press Analyze | `EXPLAIN ANALYZE` executes the query as a read-only account |
+| Read the report | Measured time, rows examined versus returned, access method, index, filter and the reason, kept apart from the optimizer's estimates; the actual plan; recommendations; similar queries |
+| Compare runs, rank queries | In the MySQL terminal: `CALL sp_compare_executions(a, b)` and `CALL sp_workload_priority(10)` (see the demo guide) |
 
 ## How it fits together
 
 ![Architecture](docs/img/architecture.png)
 
-## What happens when you press Run
+## What happens when you press Analyze
 
 ![Workflow](docs/img/workflow.png)
 
@@ -26,10 +25,6 @@ A one-page web app that runs a SQL query on a **real MySQL 8.0 database**, shows
 Every plan line has two brackets. The estimate is a guess made before running; the measured part was counted while MySQL executed the query. The page labels them differently and only ever treats measured values as results.
 
 ![Reading a plan line](docs/img/plan_reading.png)
-
-## Comparing two runs (before and after an index)
-
-![Compare runs](docs/img/ui_compare_runs.png)
 
 ## Database
 
@@ -74,7 +69,7 @@ npm run setup
 npm run warmup
 ```
 
-5. Start the page and open http://localhost:3200:
+5. Start the page and open http://localhost:3200 (black and red page: a query box, an Analyze button, then the report):
 
 ```bash
 npm run dev
