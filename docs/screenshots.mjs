@@ -45,6 +45,9 @@ await sleep(300);
 await click('Analyze');
 await sleep(4000);
 await shot('ui_report');
+await js("document.querySelector('details').open = true");
+await sleep(400);
+await shot('ui_details');
 
 ws.close(); proc.kill();
 await sleep(1500);

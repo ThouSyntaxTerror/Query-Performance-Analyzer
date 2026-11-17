@@ -6,7 +6,7 @@ Hand-off context for the Claude Code CLI. This project REPLACES the earlier PGli
 ## What it is
 One-page Next.js 16 app on a real MySQL 8.0.46 database `shop_query_analyzer` (service MySQL80, port 3306).
 Runs a user's single SELECT with `EXPLAIN ANALYZE`, parses the plan, stores run + plan + table accesses, explains why rows
-were examined, finds similar queries by cosine similarity (in MySQL). The page is deliberately minimal (query box, Analyze, report; black/red, square corners). Comparing runs and the priority ranking are done in the terminal (`sp_compare_executions`, `sp_workload_priority`, `sql/06`).
+were examined, finds similar queries by cosine similarity (in MySQL). The page is deliberately minimal: query box, Analyze, then a 0-100 RATING with reasons and SUGGESTED CHANGES (lib/rating.mjs), and a collapsed 'Technical details' section (black/red, square corners). The user's original idea with the teacher: analyze the query, rate it, recommend changes. Comparing runs and the priority ranking are done in the terminal (`sp_compare_executions`, `sp_workload_priority`, `sql/06`).
 The web app and the MySQL terminal use the same database. No login, no admin page.
 
 ## Status: built and tested; NOT pushed
@@ -35,7 +35,7 @@ node docs/screenshots.mjs <runIdBefore> <runIdAfter>   # needs the app running o
 ## Layout
 - `sql/01_schema.sql` ... `10_crud_demo.sql`: all SQL (schema, seed, stored logic, permissions, presets, 3 queries, index before/after, cleanup, DDL demo, CRUD demo).
 - `lib/sqlguard.mjs` (one read-only SELECT/WITH only), `lib/plan.mjs` (EXPLAIN ANALYZE parser + reasons), `lib/analyzer.mjs` (pipeline), `lib/db.mjs` (two pools), `lib/api.mjs`.
-- `app/page.js` (minimal), `app/components.js` (QueryInput, RunView), `app/api/{state,analyze,runs,run/[id]}/route.js`.
+- `app/page.js` (minimal), `app/components.js` (QueryInput, RatingCard, RunView), `lib/rating.mjs`, `app/api/{state,analyze,runs,run/[id]}/route.js`.
 - `scripts/setup.mjs`, `warmup.mjs`, `mysql-cli.mjs`, `_env.mjs`.
 - `docs/`: REPORT.md, DEMO_GUIDE.md, diagrams/*.mmd, img/*.png.
 

@@ -1,6 +1,6 @@
 # MySQL Query Analyzer
 
-A one-page web app that runs a SQL query on a **real MySQL 8.0 database**, shows how MySQL executed it (the actual `EXPLAIN ANALYZE` plan), and explains why rows were examined. The web app and the MySQL terminal use the **same database**, `shop_query_analyzer`.
+A one-page web app. You paste a SQL query; it runs it on a **real MySQL 8.0 database**, **rates it out of 100** and **suggests changes** (for example the exact `CREATE INDEX` to add). The technical detail behind the rating (the actual `EXPLAIN ANALYZE` plan, measured values, why rows were examined) is one click away. The web app and the MySQL terminal use the **same database**, `shop_query_analyzer`.
 
 ![Report](docs/img/ui_report.png)
 
@@ -9,8 +9,14 @@ A one-page web app that runs a SQL query on a **real MySQL 8.0 database**, shows
 | On the page | What happens in MySQL |
 |---|---|
 | Pick a preset, paste SQL or upload a `.sql` file, press Analyze | `EXPLAIN ANALYZE` executes the query as a read-only account |
-| Read the report | Measured time, rows examined versus returned, access method, index, filter and the reason, kept apart from the optimizer's estimates; the actual plan; recommendations; similar queries |
+| Read the result | A score out of 100, why it lost points, and suggested changes. Under "Technical details": measured time, rows examined versus returned, access method, index, filter and the reason, the actual plan, similar queries |
 | Compare runs, rank queries | In the MySQL terminal: `CALL sp_compare_executions(a, b)` and `CALL sp_workload_priority(10)` (see the demo guide) |
+
+## How the rating works
+
+The score starts at 100 and loses points for measured problems: slow run time, rows read and then thrown away by a filter, whole-table scans of big tables, `SELECT *`, correlated subqueries, and large results with no `LIMIT`. Each lost point is listed with its reason. The thresholds are in `lib/rating.mjs`.
+
+![Technical details](docs/img/ui_details.png)
 
 ## How it fits together
 

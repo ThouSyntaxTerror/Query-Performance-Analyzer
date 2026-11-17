@@ -62,3 +62,21 @@ th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spa
 .chip.e { border: 1px dashed #666; color: var(--muted); }
 .good { color: #fff; font-weight: 700; }
 .bad { color: var(--red); font-weight: 700; }
+
+.rating { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; }
+.score { display: flex; align-items: baseline; gap: 6px; border: 2px solid var(--red); padding: 8px 18px; }
+.score b { font-size: 56px; line-height: 1; font-weight: 700; font-variant-numeric: tabular-nums; }
+.score span { color: var(--muted); }
+.score.good { border-color: #fff; }
+.score.fair { border-color: #888; }
+.grade { font-size: 12px; font-weight: 700; letter-spacing: .2em; color: var(--red); margin-bottom: 4px; }
+.grade.good { color: #fff; }
+.grade.fair { color: #bbb; }
+.verdict { flex: 1; min-width: 260px; font-size: 15px; }
+.meter { height: 6px; background: #222; margin-top: 10px; }
+.meter i { display: block; height: 100%; background: var(--red); }
+.meter i.good { background: #fff; }
+.meter i.fair { background: #888; }
+details summary { list-style: none; }
+details summary::before { content: '+ '; color: var(--red); font-weight: 700; }
+details[open] summary::before { content: '- '; }

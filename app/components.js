@@ -129,3 +129,40 @@ export function RunView({ run, heading }) {
     </div>
   );
 }
+
+// ---------------------------------------------------------------- the short answer: rating + what to change
+export function RatingCard({ run }) {
+  const r = run.rating;
+  const tone = r.grade === 'GOOD' ? 'good' : r.grade === 'FAIR' ? 'fair' : 'poor';
+  return (
+    <div>
+      <div className="rating">
+        <div className={`score ${tone}`}><b>{r.score}</b><span>/ 100</span></div>
+        <div className="verdict">
+          <div className={`grade ${tone}`}>{r.grade}</div>
+          <div>{r.summary}</div>
+          <div className="meter"><i className={tone} style={{ width: `${r.score}%` }} /></div>
+        </div>
+      </div>
+
+      {r.reasons.length > 0 && (
+        <>
+          <h3>Why this score</h3>
+          <table><tbody>
+            {r.reasons.map((x, i) => <tr key={i}><td className="num bad">-{x.points}</td><td>{x.text}</td></tr>)}
+          </tbody></table>
+        </>
+      )}
+
+      <h3>{r.suggestions.length ? 'Suggested changes' : 'Suggested changes: none'}</h3>
+      {r.suggestions.length === 0 && <p className="muted" style={{ margin: 0 }}>This query does not need changes.</p>}
+      {r.suggestions.map((s, i) => (
+        <div className="acc" key={i}>
+          <b>{i + 1}. {s.title}</b>
+          <p className="why">{s.why}</p>
+          {s.code && <pre>{s.code}</pre>}
+        </div>
+      ))}
+    </div>
+  );
+}

@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { QueryInput, RunView, api } from './components';
+import { QueryInput, RatingCard, RunView, api } from './components';
 
 export default function Page() {
   const [presets, setPresets] = useState([]);
@@ -32,10 +32,13 @@ export default function Page() {
 
       {run && (
         <>
-          <div className="card"><RunView run={run} heading="Report" /></div>
-          <div className="card say">
-            <h2>Explanation</h2>
-            <p style={{ margin: 0 }}>{run.presenter}</p>
+          <div className="card"><RatingCard run={run} /></div>
+          <div className="card">
+            <details>
+              <summary className="muted" style={{ cursor: 'pointer' }}>Technical details: measured values, estimates, plan, tables</summary>
+              <p style={{ marginTop: 12 }}>{run.presenter}</p>
+              <RunView run={run} />
+            </details>
           </div>
         </>
       )}

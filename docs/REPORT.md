@@ -150,6 +150,25 @@ MySQL 8.0 has no vector data type, so the feature is built from standard parts:
 
 This is a transparent structural embedding (counting features), not a machine-learning model. It finds queries that are shaped alike, which is what is useful for reusing a known fix.
 
+## 6b. Rating and suggestions
+
+The page answers two questions first: how good is this query, and what should change. `lib/rating.mjs` computes a score from the stored run (measured values and the SQL text). It is a transparent heuristic, not something MySQL reports.
+
+| Rule | Points lost |
+|---|---|
+| Run time 10 to 29 ms / 30 to 99 / 100 to 499 / 500 or more | 5 / 10 / 20 / 30 |
+| Rows read then discarded by a filter (at least 1,000 rows): 20% or more / 50% or more / 90% or more of rows read | 10 / 25 / 35 |
+| Whole-table scan of a table with 20,000 or more rows | 10 |
+| `SELECT *` | 5 |
+| Correlated subquery in the plan | 10 |
+| 1,000 or more rows returned, no `LIMIT`, not an aggregate | 10 |
+
+Grade: 85 and above GOOD, 60 to 84 FAIR, below 60 NEEDS WORK.
+
+Suggestions come from the same inputs: an index on the filtered columns (with the exact `CREATE INDEX`) when a table scan keeps under 20% of the rows; narrowing the filter when it keeps more; avoid a leading `%` in `LIKE`; avoid a function around a column in `WHERE`; list columns instead of `SELECT *`; rewrite a correlated subquery as a join; add a `LIMIT`; precompute totals for a heavy aggregate. The index suggestion was checked against a real before/after run (section 9).
+
+Checked on nine queries on the real server: the indexed lookup scored 100, the March scan 50 with `CREATE INDEX ... orders (order_date)`, the Pune join 70 with an index on `customers(city)`, a leading-wildcard `LIKE` 65, a `DATE_FORMAT` filter 50 with the function warning. The score weights are a judgement; they can be tuned.
+
 ## 7. Measured values versus estimates
 
 | Value | Kind | Source |
