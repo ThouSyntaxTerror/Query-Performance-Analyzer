@@ -49,7 +49,7 @@ node docs/screenshots.mjs <runIdBefore> <runIdAfter>   # needs the app running o
 - Unsigned BIGINT subtraction errors in MySQL: cast to SIGNED (fixed in sp_compare_executions).
 - Bash heredocs with apostrophes can fail; prefer the Write tool. Never run `taskkill /IM node.exe`; stop the dev server by port:
   PowerShell `Get-NetTCPConnection -LocalPort 3200 -State Listen | % { Stop-Process -Id $_.OwningProcess -Force }`.
-- README/docs: no emojis. Commit messages end with `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`.
+- README/docs: no emojis. Do not add Co-Authored-By trailers to commits (the user wants to be the only contributor).
 
 ## Possible next steps
 1. Get the repo URL from the user, then `git remote add origin <url>` and push (ask first).
