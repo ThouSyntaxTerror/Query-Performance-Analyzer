@@ -185,6 +185,22 @@ SHOW TABLES;
 | Where is the embedding? | In `saved_queries.embedding` (a JSON array of 30 counts), built by `fn_query_embedding`; compared by `fn_cosine_similarity`. |
 | Why does the primary-key lookup preset show "Constant row"? | MySQL resolves a lookup by primary key while it is still planning ("Rows fetched before execution"), so no table scan or index walk happens at run time. |
 
+## 10. Cascading deletes and foreign keys
+
+```sql
+SOURCE sql/11_cascade_demo.sql;
+```
+
+Shows `ON DELETE CASCADE` (deleting an order deletes its items; deleting a saved query deletes its runs, plans, table accesses and recommendations, inside a transaction that is rolled back) and `ON DELETE RESTRICT` (a customer with orders cannot be deleted, error 1451, run by hand as described in the script). It ends with the rule of every foreign key from `information_schema`.
+
+## 11. Vector feature: create, read, update, delete
+
+```sql
+SOURCE sql/12_vector_ops.sql;
+```
+
+Creates a query with its embedding, finds its nearest neighbours by cosine similarity, updates the SQL text and recomputes the embedding (the neighbours change), then deletes it.
+
 ## 9. Reset between rehearsals
 
 To remove only the demo runs and keep the database:

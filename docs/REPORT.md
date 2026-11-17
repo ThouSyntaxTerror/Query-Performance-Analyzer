@@ -217,7 +217,8 @@ Run times vary from run to run by a few milliseconds; the figures above are sing
 | At least one trigger, procedure and function (project specific) | `trg_exec_after_insert`, `trg_access_after_insert`; `sp_log_execution`, `sp_workload_priority`; `fn_cosine_similarity`; section 5 above |
 | Two MySQL users/roles with different GRANT privileges | `qa_app`/`qa_app_role` versus `qa_viewer`/`qa_viewer_role` (plus `qa_runner`); `sql/04_permissions.sql`; demo guide section 2 |
 | INSERT, UPDATE, DELETE, SELECT demonstrable | `sql/10_crud_demo.sql`; demo guide section 5 |
-| Cosine similarity or another next-generation feature in MySQL | `fn_query_embedding`, `fn_cosine_similarity`; section 6 above |
+| Cosine similarity or another next-generation feature in MySQL, with create/read/update/delete | `fn_query_embedding`, `fn_cosine_similarity`; section 6 above; `sql/12_vector_ops.sql` |
+| Foreign keys and cascading | `sql/01_schema.sql` (`CASCADE`, `RESTRICT`); `sql/11_cascade_demo.sql` |
 | Useful real-world analysis prioritising repeated costly queries | `v_workload_priority`, `sp_workload_priority`, query Q1 in the terminal |
 | Setup, seed, stored logic, permissions, queries scripts | `sql/01` to `sql/06` |
 | Index before/after with actual plans, explicit cleanup | `sql/07_index_before_after.sql`, `sql/08_index_cleanup.sql`; demo guide section 6 |
