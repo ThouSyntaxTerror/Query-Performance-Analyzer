@@ -1,0 +1,49 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>ER diagram</title>
+<style>body{margin:0;background:#fff;font-family:Arial,sans-serif}</style></head>
+<body>
+<svg id="d" xmlns="http://www.w3.org/2000/svg" width="2400" height="1330" viewBox="0 0 2400 1330" font-size="14" text-anchor="middle"></svg>
+<script>
+const S = document.getElementById('d'), NS = 'http://www.w3.org/2000/svg';
+const el = (t, a, txt) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (txt) e.textContent = txt; S.appendChild(e); return e; };
+const lines = [], shapes = [];
+const line = (a, b, label, lx, ly) => lines.push([a, b, label, lx, ly]);
+
+// attrs: first is the primary key (underlined). angles: 0 = east, 90 = south. r = radius; odd items sit 70px further out.
+const E = {
+  SAVED_QUERY: { x: 420,  y: 480, a: ['query_id','label','sql_text','query_hash','is_preset','embedding (JSON)'], ang: [135,175,215,255,295,335], r: 250, stagger: true },
+  EXECUTION:   { x: 1250, y: 480, a: ['execution_id','executed_at','duration_ms','rows_returned','rows_examined','estimated_cost'], ang: [-165,-130,-95,-60,-25,10], r: 250, stagger: true },
+  QUERY_PLAN:  { x: 2020, y: 480, a: ['plan_id','execution_id','plan_text','plan_json','server_version'], ang: [-110,-50,0,50,110], r: 235 },
+  TABLE_ACCESS:{ x: 1250, y: 950, a: ['access_id','table_name','access_method','index_name','rows_examined','rows_kept'], ang: [20,60,100,140,180,220], r: 250, stagger: true },
+  RECOMMENDATION:{ x: 420, y: 950, a: ['rec_id','suggestion','severity','status','created_at'], ang: [20,70,120,170,215], r: 235 },
+};
+const R = [
+  { n: 'is run as',   x: 835,  y: 480, a: 'SAVED_QUERY', b: 'EXECUTION',     ca: '1', cb: 'N' },
+  { n: 'has',         x: 1635, y: 480, a: 'EXECUTION',   b: 'QUERY_PLAN',    ca: '1', cb: '1' },
+  { n: 'reads via',   x: 1250, y: 715, a: 'EXECUTION',   b: 'TABLE_ACCESS',  ca: '1', cb: 'N' },
+  { n: 'receives',    x: 420,  y: 715, a: 'SAVED_QUERY', b: 'RECOMMENDATION',ca: '1', cb: 'N' },
+];
+
+for (const [name, e] of Object.entries(E)) {
+  shapes.push(() => { el('rect', { x: e.x - 90, y: e.y - 30, width: 180, height: 60, fill: '#e8e0c8', stroke: '#333', 'stroke-width': 2 }); el('text', { x: e.x, y: e.y + 6, 'font-weight': 'bold', 'font-size': 18 }, name.replace('_', ' ')); });
+  e.a.forEach((t, i) => {
+    const rr = e.r + (e.stagger && i % 2 ? 70 : 0);
+    const ang = e.ang[i] * Math.PI / 180;
+    const ax = e.x + rr * Math.cos(ang), ay = e.y + rr * Math.sin(ang);
+    line([e.x, e.y], [ax, ay]);
+    shapes.push(() => { el('ellipse', { cx: ax, cy: ay, rx: 72, ry: 25, fill: '#cfe0f8', stroke: '#333' }); el('text', { x: ax, y: ay + 5, 'text-decoration': i === 0 ? 'underline' : 'none' }, t); });
+  });
+}
+for (const r of R) {
+  const A = E[r.a], B = E[r.b];
+  line([A.x, A.y], [r.x, r.y], r.ca, (A.x + r.x) / 2 + (A.x === r.x ? 14 : 0), (A.y + r.y) / 2 - (A.y === r.y ? 8 : 0));
+  line([B.x, B.y], [r.x, r.y], r.cb, (B.x + r.x) / 2 + (B.x === r.x ? 14 : 0), (B.y + r.y) / 2 - (B.y === r.y ? 8 : 0));
+  shapes.push(() => { el('polygon', { points: `${r.x},${r.y-40} ${r.x+78},${r.y} ${r.x},${r.y+40} ${r.x-78},${r.y}`, fill: '#c9f5ee', stroke: '#333', 'stroke-width': 2 }); el('text', { x: r.x, y: r.y + 5, 'font-weight': 'bold' }, r.n); });
+}
+el('text', { x: 1200, y: 50, 'font-size': 28, 'font-weight': 'bold' }, 'Performance Query Analyzer - ER Diagram');
+el('text', { x: 1200, y: 82, 'font-size': 16, fill: '#555' }, '5 entities, each with 5 or more attributes');
+el('text', { x: 1200, y: 1300, 'font-size': 15, fill: '#555' }, 'Not shown: the sample shop tables (customers, products, orders, order_items), which are the data being analysed.');
+lines.forEach(([a, b]) => el('line', { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: '#333', 'stroke-width': 1.5 }));
+shapes.forEach((f) => f());
+lines.forEach(([a, b, l, lx, ly]) => { if (l) el('text', { x: lx, y: ly, 'font-weight': 'bold', fill: '#b00', 'font-size': 20 }, l); });
+</script></body></html>
