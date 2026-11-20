@@ -3,11 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3300",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "setup": "node scripts/setup.mjs",
+    "mysql": "node scripts/mysql-cli.mjs"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "jose": "^6.2.18",
+    "mongodb": "^7.9.1",
+    "mysql2": "^3.24.6",
     "next": "16.4.6",
     "react": "19.3.0",
     "react-dom": "19.3.0"

@@ -1,0 +1,139 @@
+PLACEMENT PORTAL - PRESENTATION COMMANDS
+========================================
+Every MySQL command ends with ;   Use a capital G in \G.   CALL is for procedures (sp_...); functions (fn_...) go inside SELECT.
+Demo logins: admin / admin123    student001 / student123
+
+
+0. START (three PowerShell windows)
+-----------------------------------
+Window 1 - website:
+  cd "C:\Users\athar\OneDrive\Desktop\dhjhg\dbms\mini project\placement-portal"
+  npm run dev          (open http://localhost:3300)
+
+Window 2 - MySQL (type the password at the prompt):
+  cd "C:\Users\athar\OneDrive\Desktop\dhjhg\dbms\mini project\placement-portal"
+  & "C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" -u root -p
+  USE placement_portal;
+
+Window 3 - MongoDB:
+  mongosh
+
+
+1. WEBSITE
+----------
+Student: log in as student001 -> Browse jobs (search, filters) -> Recommended for me (match %) -> Apply -> My applications -> My profile.
+Admin:   log in as admin -> Dashboard -> Applicants (pick a job, ranked by match) -> Shortlist -> Place ->
+         Audit log (who changed what) -> Who inserts rows -> Database objects (triggers, procedures, views).
+
+
+2. WHO INSERTS ROWS (answer + proof)
+------------------------------------
+Say: "Admins insert companies, jobs, students and placements. Students insert their own applications through a
+      stored procedure. Triggers insert the audit log. Every row stores created_by, the user who inserted it."
+
+  SELECT 'jobs' AS tbl, u.username, COUNT(*) AS rows_inserted FROM jobs j JOIN users u ON u.user_id = j.created_by GROUP BY u.username;
+  SELECT 'applications' AS tbl, u.role, COUNT(*) AS rows_inserted FROM applications a JOIN users u ON u.user_id = a.created_by GROUP BY u.role;
+  SELECT audit_id, table_name, action, old_value, new_value, changed_by FROM audit_log ORDER BY audit_id DESC LIMIT 5;
+
+
+3. TABLES AND MODEL
+-------------------
+  SHOW TABLES;
+  DESCRIBE students;
+  SHOW CREATE TABLE applications\G
+  SELECT TABLE_NAME, REFERENCED_TABLE_NAME, DELETE_RULE FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = 'placement_portal';
+
+
+4. TRIGGERS
+-----------
+  SELECT TRIGGER_NAME, EVENT_OBJECT_TABLE AS on_table, ACTION_TIMING, EVENT_MANIPULATION FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = 'placement_portal';
+
+A trigger refusing a rule (student 104 has CGPA 5.51, job 11 needs 8.0; expected ERROR 1644):
+  CALL sp_apply_for_job(104, 11, 1);
+
+A trigger writing the audit log by itself (rolled back, nothing is kept):
+  START TRANSACTION;
+  CALL sp_set_application_status(1, 'SHORTLISTED', 1);
+  SELECT audit_id, table_name, action, old_value, new_value, changed_by FROM audit_log ORDER BY audit_id DESC LIMIT 2;
+  ROLLBACK;
+
+
+5. PROCEDURES, FUNCTIONS, VIEWS
+-------------------------------
+  CALL sp_rank_candidates(1, 3);
+  CALL sp_recommend_jobs(1, 3);
+  SELECT fn_match_score(1, 5) AS match_score;
+  SELECT * FROM v_placement_stats ORDER BY placed DESC LIMIT 3;
+  SELECT * FROM v_job_applicants LIMIT 3;
+
+Transaction refusing a bad placement (application 3 is only APPLIED; expected ERROR 1644):
+  CALL sp_place_student(3, 1);
+
+
+6. JOIN, GROUP BY, HAVING
+-------------------------
+  SELECT j.title, c.name AS company, COUNT(*) AS applications FROM jobs j JOIN companies c ON c.company_id = j.company_id JOIN applications a ON a.job_id = j.job_id GROUP BY j.job_id, j.title, c.name HAVING COUNT(*) >= 80 ORDER BY applications DESC LIMIT 3;
+  SELECT status, COUNT(*) AS n FROM applications GROUP BY status;
+
+
+7. CASCADE (inside a transaction, nothing is lost)
+--------------------------------------------------
+  START TRANSACTION;
+  SELECT COUNT(*) AS applications_before FROM applications WHERE student_id = 1;
+  DELETE FROM students WHERE student_id = 1;
+  SELECT COUNT(*) AS applications_after FROM applications WHERE student_id = 1;
+  ROLLBACK;
+  SELECT COUNT(*) AS applications_restored FROM applications WHERE student_id = 1;
+
+
+8. VECTOR SIMILARITY
+--------------------
+  SELECT student_id, JSON_LENGTH(embedding) AS dimensions, embedding FROM students WHERE student_id = 1;
+  SELECT ROUND(fn_cosine_similarity(s.embedding, j.embedding), 3) AS cosine FROM students s, jobs j WHERE s.student_id = 1 AND j.job_id = 5;
+  CALL sp_recommend_jobs(1, 3);
+
+
+9. PRIVILEGES
+-------------
+  SHOW GRANTS FOR 'pp_admin'@'localhost' USING 'pp_admin_role';
+  SHOW GRANTS FOR 'pp_student'@'localhost' USING 'pp_student_role';
+  SHOW GRANTS FOR 'pp_auth'@'localhost' USING 'pp_auth_role';
+
+Prove it: log in as the student account (password is in .env.local, key PP_STUDENT_PASSWORD) and try to cheat:
+  & "C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" -u pp_student -p placement_portal
+  SELECT COUNT(*) FROM jobs;                                  (allowed)
+  SELECT * FROM students LIMIT 1;                             (ERROR 1142 denied)
+  UPDATE applications SET status = 'SELECTED';                (ERROR 1142 denied)
+  CALL sp_place_student(1, 1);                                (ERROR 1370 denied)
+
+
+10. INSERT, UPDATE, DELETE (safe demo company, removed again)
+-------------------------------------------------------------
+  INSERT INTO companies (name, industry, location, created_by) VALUES ('Demo Corp', 'Software', 'Pune', 1);
+  UPDATE companies SET location = 'Mumbai' WHERE name = 'Demo Corp';
+  SELECT company_id, name, location, created_by FROM companies WHERE name = 'Demo Corp';
+  DELETE FROM companies WHERE name = 'Demo Corp';
+
+
+11. MONGODB (window 3)
+----------------------
+  use placement_portal_docs
+  show collections
+  db.resumes.countDocuments()
+  db.resumes.findOne({ student_id: 1 }, { _id: 0 })
+  db.resumes.aggregate([{ $unwind: '$skills' }, { $group: { _id: '$skills', students: { $sum: 1 } } }, { $sort: { students: -1 } }, { $limit: 5 }])
+  db.resumes.find({ $text: { $search: 'kubernetes docker' } }, { full_name: 1, skills: 1, _id: 0 }).limit(3)
+  db.resumes.getIndexes().map(i => i.name)
+
+Create, update, delete a document:
+  db.resumes.insertOne({ demo: true, full_name: 'Demo' })
+  db.resumes.updateOne({ demo: true }, { $set: { branch: 'Computer Science' } })
+  db.resumes.deleteOne({ demo: true })
+
+
+IF SOMETHING GOES WRONG
+-----------------------
+"mysql is not recognized"      use the full path in section 0.
+Stuck at the -> prompt         type ;  and press Enter, or press Ctrl+C.
+Never run DROP TABLE on the project tables; make a backup first:
+  & "C:\Program Files\MySQL\MySQL Server 8.0\bin\mysqldump.exe" -u root -p placement_portal > portal_backup.sql
